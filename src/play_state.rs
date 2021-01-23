@@ -1,19 +1,25 @@
 use crate::play_message::PlayMessage;
 use iced::{button, Button, Column, Container, Element, Row, Sandbox, Text};
+use std::cell::RefCell;
 
-#[derive(Default)]
 pub struct PlayState {
     // OutputStream to play sound
-    stream: Option<rodio::OutputStream>,
+    stream: rodio::OutputStream,
 
+    // Vector of states of the sine wave generators
+    // (array default initialization requires Copy, which Sink doesn't provide)
+    sine_wave_states: RefCell<Vec<SineWaveState>>,
+}
+
+struct SineWaveState {
     // Sink where sine waves are played
-    sink: Option<rodio::Sink>,
+    sink: rodio::Sink,
 
     // Are we playing the sine wave?
-    is_playing: [bool; 2],
+    is_playing: bool,
 
     // Local state of the play button
-    play_button: [button::State; 2],
+    play_button: button::State,
 }
 
 impl Sandbox for PlayState {
@@ -21,7 +27,7 @@ impl Sandbox for PlayState {
 
     fn new() -> Self {
         let (stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-        let sink = rodio::Sink::try_new(&stream_handle).unwrap();
+        let mut sine_wave_states = RefCell::new(Vec::new());
 
         // I can't find a way to stop() a sink and make it work again
         // even when calling append() and play(), so for now I just have a list
@@ -29,14 +35,31 @@ impl Sandbox for PlayState {
         // them as needed. They must all start paused.
 
         // https://pages.mtu.edu/~suits/notefreqs.html
-        let source = rodio::source::SineWave::new(440); // A4
-        sink.append(source);
-        sink.pause();
+        // we must round to nearest integer due to limitation of SineWave
+        // (see https://github.com/RustAudio/rodio/issues/187)
+        // A4       440.00
+        // A#4/Bb4  466.16
+        // B4       493.88
+        // C5       523.25
+        let frequencies = [440, 494];
+
+        // fill sine wave state with sink and default state for each frequency
+        for i in 0..frequencies.len() {
+            let sink = rodio::Sink::try_new(&stream_handle).unwrap();
+            let source = rodio::source::SineWave::new(frequencies[i]);
+            sink.append(source);
+            sink.pause();
+
+            sine_wave_states.borrow_mut()[i] = SineWaveState {
+                sink,
+                is_playing: false,
+                play_button: button::State::default(),
+            };
+        }
 
         Self {
-            stream: Some(stream),
-            sink: Some(sink),
-            ..Self::default()
+            stream,
+            sine_wave_states,
         }
     }
 
@@ -46,11 +69,11 @@ impl Sandbox for PlayState {
     fn update(&mut self, message: Self::Message) {
         match message {
             PlayMessage::TogglePlayback(freq_index) => {
-                self.is_playing[freq_index] ^= true;
-                if self.is_playing[freq_index] {
-                    self.play_sine_wave()
+                self.sine_wave_states.borrow_mut()[freq_index].is_playing ^= true;
+                if self.sine_wave_states.borrow()[freq_index].is_playing {
+                    self.play_sine_wave(freq_index)
                 } else {
-                    self.pause_sink()
+                    self.pause_sink(freq_index)
                 }
             }
         }
@@ -59,42 +82,30 @@ impl Sandbox for PlayState {
     fn view(&mut self) -> Element<Self::Message> {
         let mut controls = Row::new();
 
-        let frequencies = [440, 440];
-
-        let (a, b) = self.play_button.split_at_mut(1);
-
-        // for _freq in &frequencies {
-        controls = controls.push(
-            Button::new(
-                &mut a[0],
-                Text::new(if self.is_playing[0] { "Pause" } else { "Play" }),
-            )
-            .on_press(PlayMessage::TogglePlayback(0)),
-        );
-        // }
-
-        controls = controls.push(
-            Button::new(
-                &mut b[0],
-                Text::new(if self.is_playing[1] { "Pause" } else { "Play" }),
-            )
-            .on_press(PlayMessage::TogglePlayback(1)),
-        );
+        for i in 0..self.sine_wave_states.borrow().len() {
+            controls = controls.push(
+                Button::new(
+                    &mut self.sine_wave_states.borrow_mut()[i].play_button,
+                    Text::new(if self.sine_wave_states.borrow()[i].is_playing {
+                        "Pause"
+                    } else {
+                        "Play"
+                    }),
+                )
+                .on_press(PlayMessage::TogglePlayback(i)),
+            );
+        }
 
         controls.into()
     }
 }
 
 impl PlayState {
-    fn play_sine_wave(&self) {
-        if let Some(sink) = &self.sink {
-            sink.play();
-        }
+    fn play_sine_wave(&self, freq_index: usize) {
+        &self.sine_wave_states.borrow()[freq_index].sink.play();
     }
 
-    fn pause_sink(&self) {
-        if let Some(sink) = &self.sink {
-            sink.pause();
-        }
+    fn pause_sink(&self, freq_index: usize) {
+        &self.sine_wave_states.borrow()[freq_index].sink.pause();
     }
 }
