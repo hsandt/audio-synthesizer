@@ -1,4 +1,4 @@
 #[derive(Clone, Debug)]
 pub enum PlayMessage {
-    TogglePlayback,
+    TogglePlayback(usize),
 }

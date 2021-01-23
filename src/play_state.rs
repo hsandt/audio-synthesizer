@@ -1,5 +1,5 @@
 use crate::play_message::PlayMessage;
-use iced::{button, Button, Column, Container, Element, Sandbox, Text};
+use iced::{button, Button, Column, Container, Element, Row, Sandbox, Text};
 
 #[derive(Default)]
 pub struct PlayState {
@@ -10,10 +10,10 @@ pub struct PlayState {
     sink: Option<rodio::Sink>,
 
     // Are we playing the sine wave?
-    is_playing: bool,
+    is_playing: [bool; 2],
 
     // Local state of the play button
-    play_button: button::State,
+    play_button: [button::State; 2],
 }
 
 impl Sandbox for PlayState {
@@ -45,10 +45,9 @@ impl Sandbox for PlayState {
     }
     fn update(&mut self, message: Self::Message) {
         match message {
-            PlayMessage::TogglePlayback => {
-                self.is_playing ^= true;
-                println!("pressed: {}", self.is_playing);
-                if self.is_playing {
+            PlayMessage::TogglePlayback(freq_index) => {
+                self.is_playing[freq_index] ^= true;
+                if self.is_playing[freq_index] {
                     self.play_sine_wave()
                 } else {
                     self.pause_sink()
@@ -58,12 +57,31 @@ impl Sandbox for PlayState {
     }
 
     fn view(&mut self) -> Element<Self::Message> {
-        Button::new(
-            &mut self.play_button,
-            Text::new(if self.is_playing { "Pause" } else { "Play" }),
-        )
-        .on_press(PlayMessage::TogglePlayback)
-        .into()
+        let mut controls = Row::new();
+
+        let frequencies = [440, 440];
+
+        let (a, b) = self.play_button.split_at_mut(1);
+
+        // for _freq in &frequencies {
+        controls = controls.push(
+            Button::new(
+                &mut a[0],
+                Text::new(if self.is_playing[0] { "Pause" } else { "Play" }),
+            )
+            .on_press(PlayMessage::TogglePlayback(0)),
+        );
+        // }
+
+        controls = controls.push(
+            Button::new(
+                &mut b[0],
+                Text::new(if self.is_playing[1] { "Pause" } else { "Play" }),
+            )
+            .on_press(PlayMessage::TogglePlayback(1)),
+        );
+
+        controls.into()
     }
 }
 
