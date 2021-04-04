@@ -1,5 +1,5 @@
 [package]
-name = "audio-synthetizer"
+name = "audio-synthesizer"
 version = "0.1.0"
 authors = ["huulong <n.huu.long@gmail.com>"]
 edition = "2018"

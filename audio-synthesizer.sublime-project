@@ -17,7 +17,7 @@
 					"command_info":
 					{
 					},
-					"name": "doc bin audiosynthetizer no deps",
+					"name": "doc bin audiosynthesizer no deps",
 					"settings":
 					{
 						"env":
@@ -28,10 +28,10 @@
 						"features": "",
 						"no_default_features": false,
 						"release": false,
-						"target": "--bin audio-synthetizer",
+						"target": "--bin audio-synthesizer",
 						"target_triple": "",
 						"toolchain": "nightly",
-						"working_dir": "/home/leyn/Projects/Rust/audio-synthetizer"
+						"working_dir": "/home/leyn/Projects/Rust/audio-synthesizer"
 					},
 					"target": "cargo_exec"
 				},
@@ -40,7 +40,7 @@
 					"command_info":
 					{
 					},
-					"name": "audiosynthetizer-nightly",
+					"name": "audiosynthesizer-nightly",
 					"settings":
 					{
 						"env":
@@ -51,10 +51,10 @@
 						"features": "",
 						"no_default_features": false,
 						"release": false,
-						"target": "--bin audio-synthetizer",
+						"target": "--bin audio-synthesizer",
 						"target_triple": "",
 						"toolchain": "nightly",
-						"working_dir": "/home/leyn/Projects/Rust/audio-synthetizer"
+						"working_dir": "/home/leyn/Projects/Rust/audio-synthesizer"
 					},
 					"target": "cargo_exec"
 				},

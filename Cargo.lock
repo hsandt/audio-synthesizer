@@ -109,7 +109,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "audio-synthetizer"
+name = "audio-synthesizer"
 version = "0.1.0"
 dependencies = [
  "iced",
