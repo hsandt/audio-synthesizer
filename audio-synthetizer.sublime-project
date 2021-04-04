@@ -1,4 +1,118 @@
 {
+	"build_systems":
+	[
+		{
+			"command": "build",
+			"keyfiles":
+			[
+				"Cargo.toml"
+			],
+			"name": "Custom Cargo Build",
+			"selector": "source.rust",
+			"target": "cargo_exec",
+			"variants":
+			[
+				{
+					"command": "doc",
+					"command_info":
+					{
+					},
+					"name": "doc bin audiosynthetizer no deps",
+					"settings":
+					{
+						"env":
+						{
+						},
+						"extra_cargo_args": "--no-deps",
+						"extra_run_args": "",
+						"features": "",
+						"no_default_features": false,
+						"release": false,
+						"target": "--bin audio-synthetizer",
+						"target_triple": "",
+						"toolchain": "nightly",
+						"working_dir": "/home/leyn/Projects/Rust/audio-synthetizer"
+					},
+					"target": "cargo_exec"
+				},
+				{
+					"command": "auto",
+					"command_info":
+					{
+					},
+					"name": "audiosynthetizer-nightly",
+					"settings":
+					{
+						"env":
+						{
+						},
+						"extra_cargo_args": "",
+						"extra_run_args": "",
+						"features": "",
+						"no_default_features": false,
+						"release": false,
+						"target": "--bin audio-synthetizer",
+						"target_triple": "",
+						"toolchain": "nightly",
+						"working_dir": "/home/leyn/Projects/Rust/audio-synthetizer"
+					},
+					"target": "cargo_exec"
+				},
+				{
+					"command": "auto",
+					"name": "Automatic"
+				},
+				{
+					"command": "run",
+					"name": "Run"
+				},
+				{
+					"command": "run",
+					"command_info":
+					{
+						"wants_run_args": true
+					},
+					"name": "Run (with args)..."
+				},
+				{
+					"command": "check",
+					"name": "Check"
+				},
+				{
+					"command": "test",
+					"name": "Test"
+				},
+				{
+					"command": "test",
+					"command_info":
+					{
+						"wants_run_args": true
+					},
+					"name": "Test (with args)..."
+				},
+				{
+					"command": "bench",
+					"name": "Bench"
+				},
+				{
+					"command": "clean",
+					"name": "Clean"
+				},
+				{
+					"command": "doc",
+					"name": "Document"
+				},
+				{
+					"command": "clippy",
+					"name": "Clippy"
+				},
+				{
+					"command": "script",
+					"name": "Script"
+				}
+			]
+		}
+	],
 	"folders":
 	[
 		{

@@ -1,3 +1,4 @@
+#![feature(split_inclusive)]
 mod play_message;
 mod play_state;
 
