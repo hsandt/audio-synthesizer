@@ -1,6 +1,22 @@
 use crate::play_message::PlayMessage;
 use iced::{button, Button, Column, Container, Element, Row, Sandbox, Text};
 
+// https://pages.mtu.edu/~suits/notefreqs.html
+// we must round to nearest integer due to limitation of SineWave
+// (see https://github.com/RustAudio/rodio/issues/187)
+// Note     Frequency (Hz)
+// A4       440.00
+// A#4/Bb4  466.16
+// B4       493.88
+// C5       523.25
+// C#5/Db5  554.37
+// D5       587.33
+// D#5/Eb5  622.25
+// E5       659.25
+// const FREQUENCIES: [u32; 3] = [440, 554, 659];
+// with local patch to allow f32 value
+const FREQUENCIES: [f32; 3] = [440.00, 554.37, 659.25];
+
 pub struct PlayState {
     /// OutputStream to play sound
     stream: rodio::OutputStream,
@@ -36,25 +52,10 @@ impl Sandbox for PlayState {
         // or sinks ready to play at different frequencies and just pause/play
         // them as needed. They must all start paused.
 
-        // https://pages.mtu.edu/~suits/notefreqs.html
-        // we must round to nearest integer due to limitation of SineWave
-        // (see https://github.com/RustAudio/rodio/issues/187)
-        // Note     Frequency (Hz)
-        // A4       440.00
-        // A#4/Bb4  466.16
-        // B4       493.88
-        // C5       523.25
-        // C#5/Db5  554.37
-        // D5       587.33
-        // D#5/Eb5  622.25
-        // E5       659.25
-        // let frequencies = [440, 554, 659];
-        let frequencies = [440.00, 554.37, 659.25];
-
         // fill sine wave state with sink and default state for each frequency
-        for i in 0..frequencies.len() {
+        for i in 0..FREQUENCIES.len() {
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
-            let source = rodio::source::SineWave::new(frequencies[i]);
+            let source = rodio::source::SineWave::new(FREQUENCIES[i]);
             sink.append(source);
             sink.pause();
 
@@ -102,9 +103,9 @@ impl Sandbox for PlayState {
                 Button::new(
                     &mut sine_wave_state.play_button,
                     Text::new(if sine_wave_state.is_playing {
-                        "Pause"
+                        format!("Pause {} Hz", FREQUENCIES[i])
                     } else {
-                        "Play"
+                        format!("Play {} Hz", FREQUENCIES[i])
                     }),
                 )
                 .on_press(PlayMessage::TogglePlayback(i)),
