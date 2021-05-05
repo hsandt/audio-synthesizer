@@ -93,12 +93,14 @@ impl Sandbox for PlayState {
         // explode the state in individual mutable slices containing 1 element each,
         // just so we can use them in the loop and push them as mutable without causing
         // borrowing conflicts with competing usages in the loop
-        let sine_wave_state_solo_slice_iter = self
-            .sine_wave_states
-            .split_inclusive_mut(|_sine_wave_state| true);
+        let sine_wave_state_solo_slice_iter = self.sine_wave_states.chunks_mut(1);
 
         for (i, sine_wave_state_solo_slice) in sine_wave_state_solo_slice_iter.enumerate() {
-            assert_eq!(sine_wave_state_solo_slice.len(), 1, "");
+            assert_eq!(
+                sine_wave_state_solo_slice.len(),
+                1,
+                "chunks_mut(1) should generate slices of length 1"
+            );
             let sine_wave_state = &mut sine_wave_state_solo_slice[0];
             controls = controls.push(
                 Button::new(
