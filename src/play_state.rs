@@ -90,18 +90,14 @@ impl Sandbox for PlayState {
     fn view(&mut self) -> Element<Self::Message> {
         let mut controls = Row::new();
 
-        // explode the state in individual mutable slices containing 1 element each,
-        // just so we can use them in the loop and push them as mutable without causing
-        // borrowing conflicts with competing usages in the loop
-        let sine_wave_state_solo_slice_iter = self.sine_wave_states.chunks_mut(1);
+        // in order to share mutable references to each element of the vector
+        // we get the full slice and cut it 1 element at a time from the start,
+        // passing the reference to that element's play_button to make a Button
+        let mut rest = &mut self.sine_wave_states[..];
+        let mut i = 0;
 
-        for (i, sine_wave_state_solo_slice) in sine_wave_state_solo_slice_iter.enumerate() {
-            assert_eq!(
-                sine_wave_state_solo_slice.len(),
-                1,
-                "chunks_mut(1) should generate slices of length 1"
-            );
-            let sine_wave_state = &mut sine_wave_state_solo_slice[0];
+        while let Some((sine_wave_state, next_rest)) = rest.split_first_mut() {
+            rest = next_rest;
             controls = controls.push(
                 Button::new(
                     &mut sine_wave_state.play_button,
@@ -113,6 +109,7 @@ impl Sandbox for PlayState {
                 )
                 .on_press(PlayMessage::TogglePlayback(i)),
             );
+            i += 1;
         }
 
         controls.into()
