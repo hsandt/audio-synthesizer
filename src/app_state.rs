@@ -47,6 +47,7 @@ struct SineWaveState {
     sink: rodio::Sink,
 
     /// Are we playing the sine wave?
+    /// Equivalent of !sink.is_paused()
     is_playing: bool,
 
     /// Local state of the play button
@@ -98,6 +99,7 @@ impl Sandbox for AppState {
                 self.current_screen = AppScreen::Sandbox;
             }
             AppMessage::ExitSandboxMode => {
+                self.pause_all();
                 self.current_screen = AppScreen::Main;
             }
             AppMessage::TogglePlayback(freq_index) => {
@@ -175,6 +177,17 @@ impl AppState {
         self.sine_wave_states[freq_index].is_playing = false;
         self.cached_playing_sink_count -= 1;
         self.normalize_volume();
+    }
+
+    fn pause_all(&mut self) {
+        for sine_wave_state in &mut self.sine_wave_states {
+            sine_wave_state.sink.pause();
+            sine_wave_state.is_playing = false;
+        }
+
+        self.cached_playing_sink_count = 0;
+
+        // no need to normalize volume, since all sinks are paused
     }
 
     /// Normalize volume based on number of playing sink
