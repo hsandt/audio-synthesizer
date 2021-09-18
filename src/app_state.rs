@@ -17,7 +17,20 @@ use iced::{button, Button, Column, Container, Element, Row, Sandbox, Text};
 // with local patch to allow f32 value
 const FREQUENCIES: [f32; 3] = [440.00, 554.37, 659.25];
 
+#[derive(Debug)]
+enum AppScreen {
+    Main,
+    Sandbox,
+}
+
 pub struct AppState {
+    /// Current screen
+    current_screen: AppScreen,
+
+    /// Button states
+    sandbox_button_state: button::State,
+
+    /* Sandbox */
     /// OutputStream to play sound
     stream: rodio::OutputStream,
 
@@ -62,11 +75,13 @@ impl Sandbox for AppState {
             sine_wave_states.push(SineWaveState {
                 sink,
                 is_playing: false,
-                play_button: button::State::default(),
+                play_button: button::State::new(),
             });
         }
 
         Self {
+            current_screen: AppScreen::Main,
+            sandbox_button_state: button::State::new(),
             stream,
             sine_wave_states,
             cached_playing_sink_count: 0,
@@ -76,44 +91,74 @@ impl Sandbox for AppState {
     fn title(&self) -> String {
         String::from("Title")
     }
+
     fn update(&mut self, message: Self::Message) {
         match message {
+            AppMessage::EnterSandboxMode => {
+                self.current_screen = AppScreen::Sandbox;
+            }
+            AppMessage::ExitSandboxMode => {
+                self.current_screen = AppScreen::Main;
+            }
             AppMessage::TogglePlayback(freq_index) => {
                 if self.sine_wave_states[freq_index].is_playing {
-                    self.pause_and_normalize(freq_index)
+                    self.pause_and_normalize(freq_index);
                 } else {
-                    self.play_and_normalize(freq_index)
+                    self.play_and_normalize(freq_index);
                 }
             }
         }
     }
 
     fn view(&mut self) -> Element<Self::Message> {
-        let mut controls = Row::new();
+        match self.current_screen {
+            AppScreen::Main => {
+                let mut controls = Row::new();
+                controls = controls.push(
+                    Button::new(&mut self.sandbox_button_state, Text::new("Sandox mode"))
+                        .on_press(AppMessage::EnterSandboxMode),
+                );
+                controls.into()
+            }
+            AppScreen::Sandbox => {
+                let mut controls = Column::new();
 
-        // in order to share mutable references to each element of the vector
-        // we get the full slice and cut it 1 element at a time from the start,
-        // passing the reference to that element's play_button to make a Button
-        let mut rest = &mut self.sine_wave_states[..];
-        let mut i = 0;
+                let mut sandbox_controls = Row::new();
 
-        while let Some((sine_wave_state, next_rest)) = rest.split_first_mut() {
-            rest = next_rest;
-            controls = controls.push(
-                Button::new(
-                    &mut sine_wave_state.play_button,
-                    Text::new(if sine_wave_state.is_playing {
-                        format!("Pause {} Hz", FREQUENCIES[i])
-                    } else {
-                        format!("Play {} Hz", FREQUENCIES[i])
-                    }),
-                )
-                .on_press(AppMessage::TogglePlayback(i)),
-            );
-            i += 1;
+                // in order to share mutable references to each element of the vector
+                // we get the full slice and cut it 1 element at a time from the start,
+                // passing the reference to that element's play_button to make a Button
+                let mut rest = &mut self.sine_wave_states[..];
+                let mut i = 0;
+
+                while let Some((sine_wave_state, next_rest)) = rest.split_first_mut() {
+                    rest = next_rest;
+                    sandbox_controls = sandbox_controls.push(
+                        Button::new(
+                            &mut sine_wave_state.play_button,
+                            Text::new(if sine_wave_state.is_playing {
+                                format!("Pause {} Hz", FREQUENCIES[i])
+                            } else {
+                                format!("Play {} Hz", FREQUENCIES[i])
+                            }),
+                        )
+                        .on_press(AppMessage::TogglePlayback(i)),
+                    );
+                    i += 1;
+                }
+
+                // push moves content, so always call it after defining the full sub-widget
+                controls = controls.push(sandbox_controls);
+
+                // Back button
+                controls = controls.push(
+                    Button::new(&mut self.sandbox_button_state, Text::new("Back"))
+                        .on_press(AppMessage::ExitSandboxMode),
+                );
+
+                controls.into()
+            }
         }
-
-        controls.into()
     }
 }
 
