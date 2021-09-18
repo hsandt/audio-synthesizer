@@ -1,4 +1,4 @@
-use crate::play_message::PlayMessage;
+use crate::app_message::AppMessage;
 use iced::{button, Button, Column, Container, Element, Row, Sandbox, Text};
 
 // https://pages.mtu.edu/~suits/notefreqs.html
@@ -17,7 +17,7 @@ use iced::{button, Button, Column, Container, Element, Row, Sandbox, Text};
 // with local patch to allow f32 value
 const FREQUENCIES: [f32; 3] = [440.00, 554.37, 659.25];
 
-pub struct PlayState {
+pub struct AppState {
     /// OutputStream to play sound
     stream: rodio::OutputStream,
 
@@ -40,8 +40,8 @@ struct SineWaveState {
     play_button: button::State,
 }
 
-impl Sandbox for PlayState {
-    type Message = PlayMessage;
+impl Sandbox for AppState {
+    type Message = AppMessage;
 
     fn new() -> Self {
         let (stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
@@ -78,7 +78,7 @@ impl Sandbox for PlayState {
     }
     fn update(&mut self, message: Self::Message) {
         match message {
-            PlayMessage::TogglePlayback(freq_index) => {
+            AppMessage::TogglePlayback(freq_index) => {
                 if self.sine_wave_states[freq_index].is_playing {
                     self.pause_and_normalize(freq_index)
                 } else {
@@ -108,7 +108,7 @@ impl Sandbox for PlayState {
                         format!("Play {} Hz", FREQUENCIES[i])
                     }),
                 )
-                .on_press(PlayMessage::TogglePlayback(i)),
+                .on_press(AppMessage::TogglePlayback(i)),
             );
             i += 1;
         }
@@ -117,7 +117,7 @@ impl Sandbox for PlayState {
     }
 }
 
-impl PlayState {
+impl AppState {
     fn play_and_normalize(&mut self, freq_index: usize) {
         self.sine_wave_states[freq_index].sink.play();
         self.sine_wave_states[freq_index].is_playing = true;
